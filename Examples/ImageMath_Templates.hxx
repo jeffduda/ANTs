@@ -82,6 +82,7 @@
 #include "itkMRFImageFilter.h"
 #include "itkMRIBiasFieldCorrectionFilter.h"
 #include "itkMaskImageFilter.h"
+#include "itkMaskedNeighborhoodFirstOrderStatisticsImageFilter.h"
 #include "itkMaximumImageFilter.h"
 #include "itkMedianImageFilter.h"
 #include "itkMinimumMaximumImageCalculator.h"
@@ -1864,19 +1865,33 @@ WindowImage(int argc, char * argv[])
 
 template <unsigned int ImageDimension>
 int
-NeighborhoodStats(int itkNotUsed(argc), char * argv[])
+NeighborhoodStats(int argc, char * argv[])
 {
   typedef float                                 PixelType;
   typedef itk::Image<PixelType, ImageDimension> ImageType;
 
-  typedef itk::VectorImage<PixelType, ImageDimension>                                              VectorImageType;
-  typedef itk::FlatStructuringElement<ImageDimension>                                              KernelType;
-  typedef itk::NeighborhoodFirstOrderStatisticsImageFilter<ImageType, VectorImageType, KernelType> TextureFilterType;
+  typedef unsigned int                              MaskPixelType;
+  typedef itk::Image<MaskPixelType, ImageDimension> MaskImageType;
+
+  typedef itk::VectorImage<PixelType, ImageDimension>                                                                   VectorImageType;
+  typedef itk::FlatStructuringElement<ImageDimension>                                                                   KernelType;
+  typedef itk::NeighborhoodFirstOrderStatisticsImageFilter<ImageType, VectorImageType, KernelType>                      TextureFilterType;
+  typedef itk::MaskedNeighborhoodFirstOrderStatisticsImageFilter<ImageType, MaskImageType, VectorImageType, KernelType> MaskedTextureFilterType;  
 
   const std::string  outputName = std::string(argv[2]);
   const std::string  inputName = std::string(argv[4]);
   const unsigned int whichStat = static_cast<unsigned int>(std::stoi(argv[5]));
   const unsigned int rad = static_cast<unsigned int>(std::stoi(argv[6]));
+
+  typename MaskImageType::Pointer mask;
+  std::string maskName = "";
+
+  if (argc > 7) 
+  {
+    std::cout << "Reading mask image" << std::endl;
+    maskName = std::string(argv[7]);
+    ReadImage<MaskImageType>(mask, maskName.c_str());
+  }
 
   typename ImageType::Pointer input;
   ReadImage<ImageType>(input, inputName.c_str());
@@ -1885,14 +1900,30 @@ NeighborhoodStats(int itkNotUsed(argc), char * argv[])
   radius.Fill(rad);
   KernelType kernel = KernelType::Box(radius);
 
-  typename TextureFilterType::Pointer filter = TextureFilterType::New();
-  filter->SetKernel(kernel);
-  filter->SetInput(input);
-  filter->Update();
+  typename VectorImageType::Pointer statsImage;
+
+  if (argc > 7)
+  {
+    typename MaskedTextureFilterType::Pointer filter = MaskedTextureFilterType::New();
+    filter->SetKernel(kernel);
+    filter->SetInput(input);
+    filter->SetMaskImage(mask);
+    filter->Update();
+    statsImage = filter->GetOutput();
+  }
+  else
+  {
+    typename TextureFilterType::Pointer filter = TextureFilterType::New();
+    filter->SetKernel(kernel);
+    filter->SetInput(input);
+    filter->Update();
+    statsImage = filter->GetOutput();
+  }
+
 
   typedef itk::VectorIndexSelectionCastImageFilter<VectorImageType, ImageType> IndexSelectionType;
   typename IndexSelectionType::Pointer indexSelectionFilter = IndexSelectionType::New();
-  indexSelectionFilter->SetInput(filter->GetOutput());
+  indexSelectionFilter->SetInput(statsImage);
 
   switch (whichStat)
   {
