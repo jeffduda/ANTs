@@ -96,6 +96,8 @@ protected:
     Superclass::GenerateOutputInformation();
     OutputImageType * output = this->GetOutput();
 
+    std::cout << output->GetLargestPossibleRegion().GetSize() << std::endl;
+
     if (!output)
     {
       return;
