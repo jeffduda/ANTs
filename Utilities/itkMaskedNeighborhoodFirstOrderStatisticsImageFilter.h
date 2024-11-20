@@ -38,7 +38,7 @@ class ITK_EXPORT MaskedNeighborhoodFirstOrderStatisticsImageFilter
       TMaskImage,
       TOutputImage,
       TKernel,
-      typename Function::RankHistogram<float>>
+      typename Function::RankHistogram<typename TInputImage::PixelType>>
 {
 public:
   /** Standard class typedefs. */
@@ -48,7 +48,7 @@ public:
     TMaskImage,
     TOutputImage,
     TKernel,
-    typename Function::TextureHistogram<typename TInputImage::PixelType, typename TOutputImage::PixelType>>
+    typename Function::RankHistogram<typename TInputImage::PixelType>>
                                    Superclass;
   typedef SmartPointer<Self>       Pointer;
   typedef SmartPointer<const Self> ConstPointer;
@@ -92,7 +92,8 @@ protected:
     // this methods is overloaded so that if the output image is a
     // VectorImage then the correct number of components are set.
 
-    //Superclass::GenerateOutputInformation();
+    // FIXME - deal with this
+    Superclass::GenerateOutputInformation();
     OutputImageType * output = this->GetOutput();
 
     if (!output)
