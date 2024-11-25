@@ -1904,11 +1904,27 @@ NeighborhoodStats(int argc, char * argv[])
 
   if (argc > 7)
   {
+    std::cout << "Create MaskedTextureFilter" << std::endl;
     typename MaskedTextureFilterType::Pointer filter = MaskedTextureFilterType::New();
+    typename VectorImageType::PixelType fillValue;
+    fillValue.SetSize( 8 );
+    for (unsigned int i=0; i < fillValue.Size(); i++)
+    {
+      std::cout << i << " " << 0.0 << std::endl;
+      fillValue[i]=0.0;
+    }
+    std::cout << "fillValue " << fillValue << std::endl;
+
     filter->SetKernel(kernel);
     filter->SetInput(input);
     filter->SetMaskImage(mask);
+    filter->SetMaskValue(1);
+    filter->SetFillValue(fillValue);
+    filter->SetDebug(true);
+
+    std::cout << "Call MaskedNeighborhoodFirstOrderStatisticsImageFilter.Update()" << std::endl;
     filter->Update();
+    std::cout << "Call MaskedNeighborhoodFirstOrderStatisticsImageFilter.GetOutput()" << std::endl;
     statsImage = filter->GetOutput();
   }
   else

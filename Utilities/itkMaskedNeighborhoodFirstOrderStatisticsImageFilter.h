@@ -19,8 +19,8 @@
 #define __itkMaskedNeighborhoodFirstOrderStatisticsImageFilter_h
 
 #include "itkMaskedMovingHistogramImageFilter.h"
-#include "itkTextureHistogram.h"
-#include "itkRankHistogram.h"
+#include "itkMaskedTextureHistogram.h"
+//#include "itkRankHistogram.h"
 
 namespace itk
 {
@@ -38,7 +38,7 @@ class ITK_EXPORT MaskedNeighborhoodFirstOrderStatisticsImageFilter
       TMaskImage,
       TOutputImage,
       TKernel,
-      typename Function::RankHistogram<typename TInputImage::PixelType>>
+      typename Function::MaskedTextureHistogram<typename TInputImage::PixelType, typename TOutputImage::PixelType>>
 {
 public:
   /** Standard class typedefs. */
@@ -48,7 +48,7 @@ public:
     TMaskImage,
     TOutputImage,
     TKernel,
-    typename Function::RankHistogram<typename TInputImage::PixelType>>
+    typename Function::MaskedTextureHistogram<typename TInputImage::PixelType, typename TOutputImage::PixelType>>
                                    Superclass;
   typedef SmartPointer<Self>       Pointer;
   typedef SmartPointer<const Self> ConstPointer;
@@ -83,6 +83,7 @@ protected:
 
   MaskedNeighborhoodFirstOrderStatisticsImageFilter()
   {
+    std::cout << "Init MaskedNeighborhoodFirstOrderStatisticsImageFilter" << std::endl;
     // this->m_Boundary = NumericTraits< PixelType >::max();
   }
 
@@ -91,21 +92,19 @@ protected:
   {
     // this methods is overloaded so that if the output image is a
     // VectorImage then the correct number of components are set.
-
-    // FIXME - deal with this
     Superclass::GenerateOutputInformation();
     OutputImageType * output = this->GetOutput();
 
-    std::cout << output->GetLargestPossibleRegion().GetSize() << std::endl;
-
     if (!output)
     {
+      std::cout << "output not defined" << std::endl;
       return;
     }
     if (output->GetNumberOfComponentsPerPixel() != this->GetNumberOfOutputComponents())
     {
       output->SetNumberOfComponentsPerPixel(this->GetNumberOfOutputComponents());
     }
+
   }
 
 
